@@ -9,11 +9,14 @@
 #define LED_PIN     0 // Number of pin connected to Din - Data in
 #define LED_TYPE    WS2812B // Type of led strip
 #define COLOR_ORDER GRB // Green Red Blue
-#define BRIGHTNESS 80 // FROM 0 - 255
+#define BRIGHTNESS 60 // FROM 0 - 255
 // WiFi
-const char *ssid = "UniFi Salon_IoT";
-const char *password = "QVpauxmav2mk";
+const char *ssid = "";
+const char *password = "";
 
+CRGB main_color = CRGB::Black;
+// Brightness of background effect (0-255)
+#define BACKGROUND_BRIGHTNESS 255
 
 
 // LEDS OFFSETS
@@ -35,7 +38,7 @@ bool dot_visible = true;
 
 CRGB leds[NUM_LEDS];
 
-CRGB main_color = CRGB::White;
+
 uint8_t baseHue = 0;
 
 void show_dots (bool visible) {
@@ -66,6 +69,10 @@ void show_number(int num, int value) {
 }
 
 void setup() {
+      FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+    FastLED.setBrightness(BRIGHTNESS);
+    fill_solid(leds, NUM_LEDS, CHSV(0, 0, 50));
+    FastLED.show();
     Serial.begin(115200);
 
     WiFi.begin(ssid, password);
@@ -84,26 +91,26 @@ void setup() {
         "pool.ntp.org"
     );
 
+ 
+
     struct tm timeinfo;
-    if (!getLocalTime(&timeinfo)) {
+    while (!getLocalTime(&timeinfo)) {
         Serial.println("Nie udalo sie pobrac czasu");
         fill_solid(leds, NUM_LEDS, CRGB::Red);
         FastLED.show();
         delay(10000);
         fill_solid(leds, NUM_LEDS, CRGB::Black);
         FastLED.show();
-        return;
     }
 
-    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-    FastLED.setBrightness(BRIGHTNESS);
+
 
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
 }
 
 void loop() {    
-    EVERY_N_MILLIS(100) {
+    EVERY_N_MILLIS(200) {
         struct tm t;
         int h1, h2, m1, m2;
         if (getLocalTime(&t)) {
@@ -127,7 +134,7 @@ void loop() {
             }
 
             for(int j = 0; j < leds_rows[i]; j ++) {
-                leds[lines[i] + (direction * j)] = CHSV((j - straight_offsets[i] + baseHue) * 3, 255, 200);
+                leds[lines[i] + (direction * j)] = CHSV((j - straight_offsets[i] + baseHue) * 1, 255, BACKGROUND_BRIGHTNESS);
             }
 
             even = !even;
